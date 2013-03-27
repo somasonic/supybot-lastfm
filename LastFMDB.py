@@ -66,7 +66,7 @@ class LastFMDB(plugins.ChannelUserDB):
         try:
             return self['x', nick.lower()][0]
         except:
-            return false # entry does not exist
+            return # entry does not exist
 
 filename = conf.supybot.directories.data.dirize("LastFM.db")
 
