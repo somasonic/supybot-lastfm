@@ -130,9 +130,11 @@ class LastFM(callbacks.Plugin):
         Set your LastFM ID with the set method (default is your current nick)
         or specify <id> to switch for one call.
         """
-
-        id = (optionalId or self.db.getId(msg.nick) or msg.nick)
-
+        nick = msg.nick
+        id = (optionalId or self.db.getId(nick) or nick)
+        if self.db.getId(optionalId):
+		id = self.db.getId(optionalId)
+        
         # see http://www.lastfm.de/api/show/user.getrecenttracks
         url = "%s&method=user.getrecenttracks&user=%s" % (self.APIURL_2_0, id)
         try:
@@ -143,13 +145,18 @@ class LastFM(callbacks.Plugin):
 
         parser = LastFMParser()
         (user, isNowPlaying, artist, track, album, time) = parser.parseRecentTracks(f)
+	if self.db.getId(nick) == id:
+		user = nick
+        elif self.db.getId(optionalId) == id:
+                user = optionalId
+
+	albumStr = ", from the album \"" + album + "\"" if album else ""
         if isNowPlaying:
-            albumStr = "[" + album + "]" if album else ""
-            irc.reply(('%s is listening to "%s" by %s %s'
+            irc.reply(('%s is now playing "%s" by %s%s.'
                     % (user, track, artist, albumStr)).encode("utf8"))
         else:
-            irc.reply(('%s listened to "%s" by %s %s more than %s'
-                    % (user, track, artist, album,
+            irc.reply(('%s lasted played "%s" by %s%s over %s.'
+                    % (user, track, artist, albumStr,
                         self._formatTimeago(time))).encode("utf-8"))
 
     np = wrap(nowPlaying, [optional("something")])
@@ -200,7 +207,16 @@ Country: %s; Tracks played: %s" % ((id,) + profile)).encode("utf8"))
         If <user2> is ommitted, the taste is compared against the ID of the calling user.
         """
 
-        user2 = (optionalUser2 or self.db.getId(msg.nick) or msg.nick)
+	name1 = user1
+        name2 = msg.nick
+        user2 = (self.db.getId(msg.nick) or msg.nick)
+
+	if optionalUser2:
+            name2 = optionalUser2
+            user2 = (self.db.getId(optionalUser2) or optionalUser2)
+
+	if self.db.getId(user1): user1 = self.db.getId(user1)
+	    
 
         channel = msg.args[0]
         maxResults = self.registryValue("maxResults", channel)
@@ -216,13 +232,13 @@ Country: %s; Tracks played: %s" % ((id,) + profile)).encode("utf8"))
 
         xml = minidom.parse(f)
         resultNode = xml.getElementsByTagName("result")[0]
-        score = float(self._parse(resultNode, "score"))
-        scoreStr = "%s (%s)" % (round(score, 2), self._formatRating(score))
+        score = float(self._parse(resultNode, "score")) 
+        scoreStr = "%s (%s)" % (int(round(score, 2) * 100), self._formatRating(score))
         # Note: XPath would be really cool here...
         artists = [el for el in resultNode.getElementsByTagName("artist")]
         artistNames = [el.getElementsByTagName("name")[0].firstChild.data for el in artists]
         irc.reply(("Result of comparison between %s and %s: score: %s, common artists: %s" \
-                % (user1, user2, scoreStr, ", ".join(artistNames))
+                % (name1, name2, scoreStr, ", ".join(artistNames))
             ).encode("utf-8")
         )
 
