@@ -197,7 +197,7 @@ class LastFM(callbacks.Plugin):
         
         # if no tags, replace with 'none'.
         if len(tags) == 0:
-            tagStr = "none."
+            tagStr = "This track has no tags."
         
         usercountStr = " for the " + self._formatPlaycount(usercount + 1) + " time" if usercount > 0 else " for the 1st time"
         average = str(int(round(float(playcount) / float(listeners)))) 
