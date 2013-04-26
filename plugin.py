@@ -31,6 +31,7 @@
 
 import supybot.utils as utils
 from supybot.commands import *
+import supybot.ircmsgs as ircmsgs
 import supybot.conf as conf
 import supybot.plugins as plugins
 import supybot.ircutils as ircutils
@@ -39,6 +40,7 @@ import supybot.world as world
 import supybot.log as log
 
 import urllib2
+import urllib
 from xml.dom import minidom
 from time import time
 
@@ -69,6 +71,33 @@ class LastFMParser:
         except (IndexError, AttributeError):
             album = None
         return (user, isNowPlaying, artist, track, album, time)
+
+    def parseTrackInformation(self, stream):
+	"""
+	@return Tuple with information on a track in relation to a user
+	"""
+
+	xml = minidom.parse(stream).getElementsByTagName("track")[0]
+	listeners = xml.getElementsByTagName("listeners")[0].firstChild.data
+	playcount = xml.getElementsByTagName("playcount")[0].firstChild.data
+	userloved = xml.getElementsByTagName("userloved")[0].firstChild.data
+	try:
+	    usercountNode = xml.getElementsByTagName("userplaycount")[0].firstChild
+	    usercount = usercountNode.data
+	except (IndexError, AttributeError):
+	    usercount = 0
+	
+	tags = list()
+	try:
+	    toptags = xml.getElementsByTagName("toptags")[0]
+    	    tagslist = toptags.getElementsByTagName("tag")
+	    for tag in tagslist:
+	        tags.append(tag.getElementsByTagName("name")[0].firstChild.data)
+
+	except:
+	    pass
+	
+	return (int(listeners), int(playcount), int(usercount), int(userloved), tags)
 
 class LastFM(callbacks.Plugin):
     # 1.0 API (deprecated)
@@ -131,9 +160,7 @@ class LastFM(callbacks.Plugin):
         or specify <id> to switch for one call.
         """
         nick = msg.nick
-        id = (optionalId or self.db.getId(nick) or nick)
-        if self.db.getId(optionalId):
-		id = self.db.getId(optionalId)
+        id = (self.db.getId(nick) or nick)
         
         # see http://www.lastfm.de/api/show/user.getrecenttracks
         url = "%s&method=user.getrecenttracks&user=%s" % (self.APIURL_2_0, id)
@@ -145,17 +172,31 @@ class LastFM(callbacks.Plugin):
 
         parser = LastFMParser()
         (user, isNowPlaying, artist, track, album, time) = parser.parseRecentTracks(f)
+
 	if self.db.getId(nick) == id:
 		user = nick
         elif self.db.getId(optionalId) == id:
                 user = optionalId
 
-	albumStr = ", from the album \"" + album + "\"" if album else ""
+	albumStr = ", from the album " + album if album else ""
         if isNowPlaying:
-            irc.reply(('%s is now playing "%s" by %s%s.'
-                    % (user, track, artist, albumStr)).encode("utf8"))
+            # second api call for more info
+	    params = urllib.urlencode({'username': id, 'track': track, 'artist': artist})
+            urlTwo = "%smethod=track.getInfo&%s" % (self.APIURL_2_0, params)
+            fTwo = urllib2.urlopen(urlTwo)
+            (listeners, playcount, usercount, userloved, tags) = parser.parseTrackInformation(fTwo)
+
+	    tagStr = "Tags: " + ", ".join(tags[0:10]) + "."
+
+            usercountStr = " for the " + self._formatPlaycount(usercount + 1) + " time" if usercount > 0 else " for the 1st time"
+	    average = str(int(round(float(playcount) / float(listeners)))) 
+	    averageStr = "- an average of " + average + " listens per user." if listeners > 100 else ""
+	    lovedStr = " a loved track," if userloved == 1 else ""
+       	    irc.reply(('%s (%s) is now playing%s "%s" by %s%s%s. This track has been played %s times by %s listeners %s' % (user, id, lovedStr, track, artist, albumStr, usercountStr, playcount, listeners, averageStr)).encode("utf8"))
+	    if len(tags) > 0:
+	    	irc.reply(tagStr.encode("utf8"))
         else:
-            irc.reply(('%s lasted played "%s" by %s%s over %s.'
+            irc.reply(('%s last played "%s" by %s%s over %s.'
                     % (user, track, artist, albumStr,
                         self._formatTimeago(time))).encode("utf-8"))
 
@@ -237,8 +278,8 @@ Country: %s; Tracks played: %s" % ((id,) + profile)).encode("utf8"))
         # Note: XPath would be really cool here...
         artists = [el for el in resultNode.getElementsByTagName("artist")]
         artistNames = [el.getElementsByTagName("name")[0].firstChild.data for el in artists]
-        irc.reply(("Result of comparison between %s and %s: score: %s, common artists: %s" \
-                % (name1, name2, scoreStr, ", ".join(artistNames))
+        irc.reply(("Result of comparison between %s (%s) and %s (%s): score: %s, common artists: %s" \
+                % (name1, user1, name2, user2, scoreStr, ", ".join(artistNames))
             ).encode("utf-8")
         )
 
@@ -279,6 +320,24 @@ Country: %s; Tracks played: %s" % ((id,) + profile)).encode("utf8"))
             return "Low"
         else:
             return "Very Low"
+
+    def _formatPlaycount(self, num):
+	"""Format playcount
+
+	@param num Number to ordinalize	
+	"""
+
+	# Taken from http://teachthe.net/?p=1165
+
+        special_suffixes = { '1': 'st', '2': 'nd', '3': 'rd' }
+        default_return = 'th'
+        digits = str(abs(num)) # To work with negative numbers
+        last_digit = digits[-1:]
+        if last_digit in special_suffixes.keys():
+            if len(digits) == 1 or digits[-2] != '1':
+                default_return = special_suffixes[last_digit]
+
+        return str(num) + default_return
 
 dbfilename = conf.supybot.directories.data.dirize("LastFM.db")
 
