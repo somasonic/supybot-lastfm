@@ -1,6 +1,7 @@
 ###
 # Copyright (c) 2006, Ilya Kuznetsov
 # Copyright (c) 2008,2012 Kevin Funk
+# Copyright (c) 2013 Andrew Northall <andrew@northall.me.uk>
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
