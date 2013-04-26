@@ -170,36 +170,49 @@ class LastFM(callbacks.Plugin):
         except urllib2.HTTPError:
             irc.error("Unknown ID (%s)" % id)
             return
-
+            
         parser = LastFMParser()
         (user, isNowPlaying, artist, track, album, time) = parser.parseRecentTracks(f)
-
-	if self.db.getId(nick) == id:
-		user = nick
-        elif self.db.getId(optionalId) == id:
-                user = optionalId
-
-	albumStr = ", from the album " + album if album else ""
-        if isNowPlaying:
-            # second api call for more info
-	    params = urllib.urlencode({'username': id, 'track': track, 'artist': artist})
+        
+        # extra API call to get: listeners, playcount, user playcount, user loved (0/1 toggle), track tags
+        # doc: http://www.last.fm/api/show/track.getInfo
+        try:
+    	    params = urllib.urlencode({'username': id, 'track': track, 'artist': artist})
             urlTwo = "%smethod=track.getInfo&%s" % (self.APIURL_2_0, params)
             fTwo = urllib2.urlopen(urlTwo)
-            (listeners, playcount, usercount, userloved, tags) = parser.parseTrackInformation(fTwo)
+        except urllib2.HTTPError:
+            irc.error("Error getting now playing track infomation for %s" % id)
 
-	    tagStr = "Tags: " + ", ".join(tags[0:10]) + "."
+        (listeners, playcount, usercount, userloved, tags) = parser.parseTrackInformation(fTwo)
+        
+        if self.db.getId(nick) == id:
+	        user = nick
+        elif self.db.getId(optionalId) == id:
+            user = optionalId
 
-            usercountStr = " for the " + self._formatPlaycount(usercount + 1) + " time" if usercount > 0 else " for the 1st time"
-	    average = str(int(round(float(playcount) / float(listeners)))) 
-	    averageStr = "- an average of " + average + " listens per user." if listeners > 100 else ""
-	    lovedStr = " a loved track," if userloved == 1 else ""
-       	    irc.reply(('%s (%s) is now playing%s "%s" by %s%s%s. This track has been played %s times by %s listeners %s' % (user, id, lovedStr, track, artist, albumStr, usercountStr, playcount, listeners, averageStr)).encode("utf8"))
-	    if len(tags) > 0:
-	    	irc.reply(tagStr.encode("utf8"))
+        albumStr = ", from the album " + album if album else ""
+        
+        # display 10 tags
+        tagStr = "Tags: " + ", ".join(tags[0:10]) + "."
+        
+        # if no tags, replace with 'none'.
+        if len(tags) == 0:
+            tagStr = "none."
+        
+        usercountStr = " for the " + self._formatPlaycount(usercount + 1) + " time" if usercount > 0 else " for the 1st time"
+        average = str(int(round(float(playcount) / float(listeners)))) 
+        averageStr = "- an average of " + average + " listens per user." if listeners > 100 else ""
+        lovedStr = " a loved track," if userloved == 1 else ""
+        
+        if isNowPlaying:
+       	    irc.reply(('%s (%s) is now playing%s "%s" by %s%s%s. This track has been played %s times by %s listeners %s' \
+                % (user, id, lovedStr, track, artist, albumStr, usercountStr, playcount, listeners, averageStr)).encode("utf8"))
+            irc.reply(tagStr.encode("utf8"))
+
         else:
-            irc.reply(('%s last played "%s" by %s%s over %s.'
-                    % (user, track, artist, albumStr,
-                        self._formatTimeago(time))).encode("utf-8"))
+       	    irc.reply(('%s (%s) last played%s "%s" by %s%s%s. This track has been played %s times by %s listeners %s' \
+                % (user, id, lovedStr, track, artist, albumStr, usercountStr, playcount, listeners, averageStr)).encode("utf8"))
+            irc.reply(tagStr.encode("utf8"))
 
     np = wrap(nowPlaying, [optional("something")])
 
@@ -292,17 +305,6 @@ Country: %s; Tracks played: %s" % ((id,) + profile)).encode("utf8"))
             except IndexError:
                 return exceptMsg
 
-    def _formatTimeago(self, unixtime):
-        t = int(time()-unixtime)
-        if t/86400 > 0:
-            return "%i days ago" % (t/86400)
-        if t/3600 > 0:
-            return "%i hours ago" % (t/3600)
-        if t/60 > 0:
-            return "%i minutes ago" % (t/60)
-        if t > 0:
-            return "%i seconds ago" % (t)
-
     def _formatRating(self, score):
         """Format rating
 
@@ -323,13 +325,12 @@ Country: %s; Tracks played: %s" % ((id,) + profile)).encode("utf8"))
             return "Very Low"
 
     def _formatPlaycount(self, num):
-	"""Format playcount
-
-	@param num Number to ordinalize	
-	"""
-
-	# Taken from http://teachthe.net/?p=1165
-
+        """Format playcount
+    
+	    @param num Number to ordinalize	
+	    """
+        # Taken from http://teachthe.net/?p=1165
+        
         special_suffixes = { '1': 'st', '2': 'nd', '3': 'rd' }
         default_return = 'th'
         digits = str(abs(num)) # To work with negative numbers
@@ -337,8 +338,9 @@ Country: %s; Tracks played: %s" % ((id,) + profile)).encode("utf8"))
         if last_digit in special_suffixes.keys():
             if len(digits) == 1 or digits[-2] != '1':
                 default_return = special_suffixes[last_digit]
-
+        
         return str(num) + default_return
+
 
 dbfilename = conf.supybot.directories.data.dirize("LastFM.db")
 
