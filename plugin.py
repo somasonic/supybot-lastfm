@@ -205,12 +205,12 @@ class LastFM(callbacks.Plugin):
         lovedStr = " a loved track," if userloved == 1 else ""
         
         if isNowPlaying:
-       	    irc.reply(('%s (%s) is now playing%s "%s" by %s%s%s. This track has been played %s times by %s listeners %s' \
+       	    irc.reply(('%s (%s) is now playing%s "%s" by %s%s%s. This track has been played %s times by %s listeners %s.' \
                 % (user, id, lovedStr, track, artist, albumStr, usercountStr, playcount, listeners, averageStr)).encode("utf8"))
             irc.reply(tagStr.encode("utf8"))
 
         else:
-       	    irc.reply(('%s (%s) last played%s "%s" by %s%s%s. This track has been played %s times by %s listeners %s' \
+       	    irc.reply(('%s (%s) last played%s "%s" by %s%s%s. This track has been played %s times by %s listeners %s.' \
                 % (user, id, lovedStr, track, artist, albumStr, usercountStr, playcount, listeners, averageStr)).encode("utf8"))
             irc.reply(tagStr.encode("utf8"))
 
