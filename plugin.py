@@ -162,7 +162,9 @@ class LastFM(callbacks.Plugin):
         """
         nick = msg.nick
         id = (self.db.getId(nick) or nick)
-        
+        if optionalId:
+            id = (self.db.getId(optionalId) or optionalId)
+            
         # see http://www.lastfm.de/api/show/user.getrecenttracks
         url = "%s&method=user.getrecenttracks&user=%s" % (self.APIURL_2_0, id)
         try:
