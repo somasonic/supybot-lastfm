@@ -162,8 +162,14 @@ class LastFM(callbacks.Plugin):
         """
         nick = msg.nick
         id = (self.db.getId(nick) or nick)
+        channel = None
+        
         if optionalId:
-            id = (self.db.getId(optionalId) or optionalId)
+            if optionalId[0] == "#":
+                id = (self.db.getId(nick) or nick)
+                channel = optionalId
+            else:
+                id = (self.db.getId(optionalId) or optionalId)
             
         # see http://www.lastfm.de/api/show/user.getrecenttracks
         url = "%s&method=user.getrecenttracks&user=%s" % (self.APIURL_2_0, id)
@@ -192,9 +198,17 @@ class LastFM(callbacks.Plugin):
         elif self.db.getId(optionalId) == id:
             user = optionalId
             
-        irc.reply(self._formatNowPlaying(user, id, track, artist, album, usercount, playcount, listeners, userloved, isNowPlaying))
-        irc.reply(self._formatTags(tags))
-
+        replyStr = self._formatNowPlaying(user, id, track, artist, album, usercount, playcount, listeners, userloved, isNowPlaying)
+        tagStr = self._formatTags(tags)
+            
+        if channel == None:
+            irc.reply(replyStr)
+            irc.reply(tagStr)
+        else:
+            irc.queueMsg(ircmsgs.privmsg(channel, replyStr))
+            irc.queueMsg(ircmsgs.privmsg(channel, tagStr))
+            irc.noReply()
+            
     np = wrap(nowPlaying, [optional("something")])
 
     def setUserId(self, irc, msg, args, newId):
