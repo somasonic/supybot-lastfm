@@ -184,7 +184,7 @@ class LastFM(callbacks.Plugin):
             return
             
         parser = LastFMParser()
-        (user, isNowPlaying, artist, track, album, time) = parser.parseRecentTracks(f)
+        (username, isNowPlaying, artist, track, album, time) = parser.parseRecentTracks(f)
         
         # extra API call to get: listeners, playcount, user playcount, user loved (0/1 toggle), track tags
         # doc: http://www.last.fm/api/show/track.getInfo
