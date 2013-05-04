@@ -203,16 +203,16 @@ class LastFM(callbacks.Plugin):
         
         usercountStr = " for the " + self._formatPlaycount(usercount + 1) + " time" if usercount > 0 else " for the 1st time"
         average = str(int(round(float(playcount) / float(listeners)))) 
-        averageStr = "- an average of " + average + " listens per user." if listeners > 100 else "."
+        averageStr = " - an average of " + average + " listens per user." if listeners > 100 else "."
         lovedStr = " a loved track," if userloved == 1 else ""
         
         if isNowPlaying:
-       	    irc.reply(('%s (%s) is now playing%s "%s" by %s%s%s. This track has been played %s times by %s listeners %s' \
+       	    irc.reply(('%s (%s) is now playing%s "%s" by %s%s%s. This track has been played %s times by %s listeners%s' \
                 % (user, id, lovedStr, track, artist, albumStr, usercountStr, playcount, listeners, averageStr)).encode("utf8"))
             irc.reply(tagStr.encode("utf8"))
 
         else:
-       	    irc.reply(('%s (%s) last played%s "%s" by %s%s%s. This track has been played %s times by %s listeners %s' \
+       	    irc.reply(('%s (%s) last played%s "%s" by %s%s%s. This track has been played %s times by %s listeners%s' \
                 % (user, id, lovedStr, track, artist, albumStr, usercountStr, playcount, listeners, averageStr)).encode("utf8"))
             irc.reply(tagStr.encode("utf8"))
 
