@@ -130,7 +130,10 @@ class LastFM(callbacks.Plugin):
         or specify <id> to switch for one call.
         """
 
-        id = (optionalId or self.db.getId(msg.nick) or msg.nick)
+        id = (self.db.getId(msg.nick) or msg.nick)
+        if optionalId:
+            id = (self.db.getId(optionalId) or optionalId)
+        
         channel = msg.args[0]
         maxResults = self.registryValue("maxResults", channel)
         method = method.lower()
@@ -162,14 +165,15 @@ class LastFM(callbacks.Plugin):
         """
         nick = msg.nick
         id = (self.db.getId(nick) or nick)
+        user = nick
         channel = None
         
         if optionalId:
             if optionalId[0] == "#":
-                id = (self.db.getId(nick) or nick)
                 channel = optionalId
             else:
                 id = (self.db.getId(optionalId) or optionalId)
+                user = optionalId
             
         # see http://www.lastfm.de/api/show/user.getrecenttracks
         url = "%s&method=user.getrecenttracks&user=%s" % (self.APIURL_2_0, id)
@@ -192,12 +196,7 @@ class LastFM(callbacks.Plugin):
             irc.error("Error getting now playing track infomation for %s" % id)
 
         (listeners, playcount, usercount, userloved, tags) = parser.parseTrackInformation(fTwo)
-        
-        if self.db.getId(nick) == id:
-	        user = nick
-        elif self.db.getId(optionalId) == id:
-            user = optionalId
-            
+                    
         replyStr = self._formatNowPlaying(user, id, track, artist, album, usercount, playcount, listeners, userloved, isNowPlaying)
         tagStr = self._formatTags(tags)
             
@@ -232,7 +231,12 @@ class LastFM(callbacks.Plugin):
         or specify <id> to switch for one call.
         """
 
-        id = (optionalId or self.db.getId(msg.nick) or msg.nick)
+        id = (self.db.getId(msg.nick) or msg.nick)
+        user = msg.nick
+        
+        if optionalId:
+            id = (self.db.getId(optionalId) or optionalId)
+            user = optionalId
 
         url = "%s/%s/profile.xml" % (self.APIURL_1_0, id)
         try:
@@ -242,11 +246,10 @@ class LastFM(callbacks.Plugin):
             return
 
         xml = minidom.parse(f).getElementsByTagName("profile")[0]
-        keys = "realname registered age gender country playcount".split()
+        keys = "realname registered playcount".split()
         profile = tuple([self._parse(xml, node) for node in keys])
-
-        irc.reply(("%s (realname: %s) registered on %s; age: %s / %s; \
-Country: %s; Tracks played: %s" % ((id,) + profile)).encode("utf8"))
+        
+        irc.reply(("%s (realname: %s) joined Last.FM on %s. Total tracks played: %s. [http://last.fm/user/%s]" % ((user,) + profile + (id,))).encode("utf8"))
 
     profile = wrap(profile, [optional("something")])
 
