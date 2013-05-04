@@ -191,30 +191,9 @@ class LastFM(callbacks.Plugin):
 	        user = nick
         elif self.db.getId(optionalId) == id:
             user = optionalId
-
-        albumStr = ", from the album " + album if album else ""
-        
-        # display 10 tags
-        tagStr = "Tags: " + ", ".join(tags[0:10]) + "."
-        
-        # if no tags, replace with 'none'.
-        if len(tags) == 0:
-            tagStr = "This track has no tags."
-        
-        usercountStr = " for the " + self._formatPlaycount(usercount + 1) + " time" if usercount > 0 else " for the 1st time"
-        average = str(int(round(float(playcount) / float(listeners)))) 
-        averageStr = " - an average of " + average + " listens per user." if listeners > 100 else "."
-        lovedStr = " a loved track," if userloved == 1 else ""
-        
-        if isNowPlaying:
-       	    irc.reply(('%s (%s) is now playing%s "%s" by %s%s%s. This track has been played %s times by %s listeners%s' \
-                % (user, id, lovedStr, track, artist, albumStr, usercountStr, playcount, listeners, averageStr)).encode("utf8"))
-            irc.reply(tagStr.encode("utf8"))
-
-        else:
-       	    irc.reply(('%s (%s) last played%s "%s" by %s%s%s. This track has been played %s times by %s listeners%s' \
-                % (user, id, lovedStr, track, artist, albumStr, usercountStr, playcount, listeners, averageStr)).encode("utf8"))
-            irc.reply(tagStr.encode("utf8"))
+            
+        irc.reply(self._formatNowPlaying(user, id, track, artist, album, usercount, playcount, listeners, userloved, isNowPlaying))
+        irc.reply(self._formatTags(tags))
 
     np = wrap(nowPlaying, [optional("something")])
 
@@ -325,6 +304,28 @@ Country: %s; Tracks played: %s" % ((id,) + profile)).encode("utf8"))
             return "Low"
         else:
             return "Very Low"
+            
+    def _formatTags(self, tags):
+        # display 10 tags
+        tagStr = "Tags: " + ", ".join(tags[0:10]) + "."
+        
+        # if no tags, replace with 'none'.
+        if len(tags) == 0:
+            tagStr = "This track has no tags."
+        
+        return tagStr
+            
+    def _formatNowPlaying(self, user, id, track, artist, album, usercount, playcount, listeners, userloved, isNowPlaying):
+        albumStr = ", from the album " + album if album else ""        
+        usercountStr = " for the " + self._formatPlaycount(usercount + 1) + " time" if usercount > 0 else " for the 1st time"
+        average = str(int(round(float(playcount) / float(listeners)))) 
+        averageStr = " - an average of " + average + " listens per user." if listeners > 100 else "."
+        lovedStr = " a loved track," if userloved == 1 else ""
+        
+        timeStr = "is now playing" if isNowPlaying == 1 else "last played"
+        
+        return ('%s (%s) %s%s "%s" by %s%s%s. This track has been played %s times by %s listeners%s' \
+                    % (user, id, timeStr, lovedStr, track, artist, albumStr, usercountStr, playcount, listeners, averageStr)).encode("utf8")        
 
     def _formatPlaycount(self, num):
         """Format playcount
