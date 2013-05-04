@@ -179,7 +179,7 @@ class LastFM(callbacks.Plugin):
         # extra API call to get: listeners, playcount, user playcount, user loved (0/1 toggle), track tags
         # doc: http://www.last.fm/api/show/track.getInfo
         try:
-    	    params = urllib.urlencode({'username': id, 'track': track, 'artist': artist})
+    	    params = urllib.urlencode({'username': id.encode("utf8"), 'track': track.encode("utf8"), 'artist': artist.encode("utf8")})
             urlTwo = "%smethod=track.getInfo&%s" % (self.APIURL_2_0, params)
             fTwo = urllib2.urlopen(urlTwo)
         except urllib2.HTTPError:
