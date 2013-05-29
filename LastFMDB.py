@@ -67,20 +67,6 @@ class LastFMDB(plugins.ChannelUserDB):
             return self['x', nick.lower()][0]
         except:
             return # entry does not exist
-            
-    def setToken(self, nick, id):
-        """ 
-        if nick.lower() == id.lower():
-            del self['x', nick.lower()] # FIXME: Bug in supybot(?)
-        else:"""
-        self['y', nick.lower()] = (id,)
-
-    def getToken(self, nick):
-        try:
-            return self['y', nick.lower()][0]
-        except:
-            return # entry does not exist
-    
 
 filename = conf.supybot.directories.data.dirize("LastFM.db")
 
