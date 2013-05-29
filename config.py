@@ -47,5 +47,14 @@ LastFM = conf.registerPlugin('LastFM')
 conf.registerChannelValue(LastFM, "maxResults",
     registry.NonNegativeInteger(5, """Limits the number of results that will be
         displayed in the channel."""))
+        
+conf.registerChannelValue(LastFM, "verboseOutput",
+    registry.Boolean(True, """Give detailed output of now playing command"""))
+    
+conf.registerGlobalValue(LastFM, "apiKey",
+    registry.String("", """Your Last.FM API key"""))
+
+conf.registerGlobalValue(LastFM, "apiSecret",
+    registry.String("", """Your Last.FM API secret"""))
 
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:
