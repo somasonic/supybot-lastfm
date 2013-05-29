@@ -105,8 +105,8 @@ class LastFM(callbacks.Plugin):
     APIURL_1_0 = "http://ws.audioscrobbler.com/1.0/user"
 
     # 2.0 API (see http://www.lastfm.de/api/intro)
-    APIKEY = self.registryValue('apiKey')
-    APISECRET = self.registryValue('apiSecret')
+    APIKEY = LastFM.registryValue('apiKey')
+    APISECRET = LastFM.registryValue('apiSecret')
     APIURL_2_0 = "http://ws.audioscrobbler.com/2.0/?api_key=%s&" % APIKEY
 
     def __init__(self, irc):
