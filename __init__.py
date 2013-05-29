@@ -49,11 +49,10 @@ __contributors__ = {
             supybot.Author("Ilya Kuznetsov", "worklez", "worklez@gmail.com"): ["profile"],
             supybot.Author("Pavel Dvořák", "czshadow", "czshadow@gmail.com"):
             ["misc"],
-            supybot.Author("Andrew Northall", "somasonic", "code@somasonic.org"): ["misc"],
         }
 
 # This is a url where the most recent plugin package can be downloaded.
-__url__ = 'https://github.com/somasonic/supybot-lastfm'
+__url__ = 'https://github.com/krf/supybot-lastfm'
 
 import config
 import plugin
