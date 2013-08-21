@@ -338,11 +338,12 @@ class LastFM(callbacks.Plugin):
         average = str(int(round(float(playcount) / float(listeners)))) 
         averageStr = " - an average of " + average + " listens per user." if listeners > 100 else "."
         lovedStr = " a loved track," if userloved == 1 else ""
+        userStr = "" if user == id else " (" + id + ")"
         
         timeStr = "is now playing" if isNowPlaying == 1 else "last played"
         
-        return ('%s (%s) %s%s "%s" by %s%s%s. This track has been played %s times by %s listeners%s' \
-                    % (user, id, timeStr, lovedStr, track, artist, albumStr, usercountStr, playcount, listeners, averageStr)).encode("utf8")        
+        return ('%s%s %s%s "%s" by %s%s%s. This track has been played %s times by %s listeners%s' \
+                    % (user, userStr, timeStr, lovedStr, track, artist, albumStr, usercountStr, playcount, listeners, averageStr)).encode("utf8")        
 
     def _formatPlaycount(self, num):
         """Format playcount
