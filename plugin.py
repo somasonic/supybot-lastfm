@@ -201,11 +201,9 @@ class LastFM(callbacks.Plugin):
         tagStr = self._formatTags(tags)
             
         if channel == None:
-            irc.reply(replyStr)
-            irc.reply(tagStr)
+            irc.reply(replyStr + tagStr)
         else:
-            irc.queueMsg(ircmsgs.privmsg(channel, replyStr))
-            irc.queueMsg(ircmsgs.privmsg(channel, tagStr))
+            irc.queueMsg(ircmsgs.privmsg(channel, replyStr + tagStr))
             irc.noReply()
             
     np = wrap(nowPlaying, [optional("something")])
@@ -335,15 +333,13 @@ class LastFM(callbacks.Plugin):
     def _formatNowPlaying(self, user, id, track, artist, album, usercount, playcount, listeners, userloved, isNowPlaying):
         albumStr = ", from the album " + album if album else ""        
         usercountStr = " for the " + self._formatPlaycount(usercount + 1) + " time" if usercount > 0 else " for the 1st time"
-        average = str(int(round(float(playcount) / float(listeners)))) 
-        averageStr = " - an average of " + average + " listens per user." if listeners > 100 else "."
         lovedStr = " a loved track," if userloved == 1 else ""
         userStr = "" if user == id else " (" + id + ")"
         
         timeStr = "is now playing" if isNowPlaying == 1 else "last played"
         
-        return ('%s%s %s%s "%s" by %s%s%s. This track has been played %s times by %s listeners%s' \
-                    % (user, userStr, timeStr, lovedStr, track, artist, albumStr, usercountStr, playcount, listeners, averageStr)).encode("utf8")        
+        return ('%s%s %s%s "%s" by %s%s%s. This track has been played %s times by %s listeners. ' \
+                    % (user, userStr, timeStr, lovedStr, track, artist, albumStr, usercountStr, playcount, listeners)).encode("utf8")        
 
     def _formatPlaycount(self, num):
         """Format playcount
