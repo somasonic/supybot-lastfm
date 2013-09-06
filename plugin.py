@@ -87,7 +87,7 @@ class LastFMParser:
 	    usercount = usercountNode.data
 	except (IndexError, AttributeError):
 	    usercount = 0
-	
+
 	tags = list()
 	try:
 	    toptags = xml.getElementsByTagName("toptags")[0]
@@ -97,7 +97,7 @@ class LastFMParser:
 
 	except:
 	    pass
-	
+
 	return (int(listeners), int(playcount), int(usercount), int(userloved), tags)
 
 class LastFM(callbacks.Plugin):
@@ -133,7 +133,7 @@ class LastFM(callbacks.Plugin):
         id = (self.db.getId(msg.nick) or msg.nick)
         if optionalId:
             id = (self.db.getId(optionalId) or optionalId)
-        
+
         channel = msg.args[0]
         maxResults = self.registryValue("maxResults", channel)
         method = method.lower()
@@ -167,14 +167,14 @@ class LastFM(callbacks.Plugin):
         id = (self.db.getId(nick) or nick)
         user = nick
         channel = None
-        
+
         if optionalId:
             if optionalId[0] == "#":
                 channel = optionalId
             else:
                 id = (self.db.getId(optionalId) or optionalId)
                 user = optionalId
-            
+
         # see http://www.lastfm.de/api/show/user.getrecenttracks
         url = "%s&method=user.getrecenttracks&user=%s" % (self.APIURL_2_0, id)
         try:
@@ -182,10 +182,10 @@ class LastFM(callbacks.Plugin):
         except urllib2.HTTPError:
             irc.error("Unknown ID (%s)" % id)
             return
-            
+
         parser = LastFMParser()
         (username, isNowPlaying, artist, track, album, time) = parser.parseRecentTracks(f)
-        
+
         # extra API call to get: listeners, playcount, user playcount, user loved (0/1 toggle), track tags
         # doc: http://www.last.fm/api/show/track.getInfo
         try:
@@ -196,16 +196,16 @@ class LastFM(callbacks.Plugin):
             irc.error("Error getting now playing track infomation for %s" % id)
 
         (listeners, playcount, usercount, userloved, tags) = parser.parseTrackInformation(fTwo)
-                    
+
         replyStr = self._formatNowPlaying(user, id, track, artist, album, usercount, playcount, listeners, userloved, isNowPlaying)
         tagStr = self._formatTags(tags)
-            
+
         if channel == None:
             irc.reply(replyStr + tagStr)
         else:
             irc.queueMsg(ircmsgs.privmsg(channel, replyStr + tagStr))
             irc.noReply()
-            
+
     np = wrap(nowPlaying, [optional("something")])
 
     def setUserId(self, irc, msg, args, newId):
@@ -231,7 +231,7 @@ class LastFM(callbacks.Plugin):
 
         id = (self.db.getId(msg.nick) or msg.nick)
         user = msg.nick
-        
+
         if optionalId:
             id = (self.db.getId(optionalId) or optionalId)
             user = optionalId
@@ -246,7 +246,7 @@ class LastFM(callbacks.Plugin):
         xml = minidom.parse(f).getElementsByTagName("profile")[0]
         keys = "realname registered playcount".split()
         profile = tuple([self._parse(xml, node) for node in keys])
-        
+
         irc.reply(("%s (realname: %s) joined Last.FM on %s. Total tracks played: %s. [http://last.fm/user/%s]" % ((user,) + profile + (id,))).encode("utf8"))
 
     profile = wrap(profile, [optional("something")])
@@ -267,7 +267,7 @@ class LastFM(callbacks.Plugin):
             user2 = (self.db.getId(optionalUser2) or optionalUser2)
 
 	if self.db.getId(user1): user1 = self.db.getId(user1)
-	    
+
 
         channel = msg.args[0]
         maxResults = self.registryValue("maxResults", channel)
@@ -283,7 +283,7 @@ class LastFM(callbacks.Plugin):
 
         xml = minidom.parse(f)
         resultNode = xml.getElementsByTagName("result")[0]
-        score = float(self._parse(resultNode, "score")) 
+        score = float(self._parse(resultNode, "score"))
         scoreStr = "%s (%s)" % (int(round(score, 2) * 100), self._formatRating(score))
         # Note: XPath would be really cool here...
         artists = [el for el in resultNode.getElementsByTagName("artist")]
@@ -319,20 +319,21 @@ class LastFM(callbacks.Plugin):
             return "Low"
         else:
             return "Very Low"
-            
+
     def _formatTags(self, tags):
         # display 10 tags
         tagStr = "Tags: " + ", ".join(tags[0:10]) + "."
-        
+
         # if no tags, replace with 'none'.
         if len(tags) == 0:
             tagStr = "This track has no tags."
-        
+
         return tagStr
-            
+
     def _formatNowPlaying(self, user, id, track, artist, album, usercount, playcount, listeners, userloved, isNowPlaying):
-        albumStr = ", from the album " + album if album else ""        
+        albumStr = ", from the album " + album if album else ""
         usercountStr = " for the " + self._formatPlaycount(usercount + 1) + " time" if usercount > 0 else " for the 1st time"
+<<<<<<< HEAD
         lovedStr = " a loved track," if userloved == 1 else ""
         userStr = "" if user == id else " (" + id + ")"
         
@@ -343,11 +344,11 @@ class LastFM(callbacks.Plugin):
 
     def _formatPlaycount(self, num):
         """Format playcount
-    
-	    @param num Number to ordinalize	
+
+	    @param num Number to ordinalize
 	    """
         # Taken from http://teachthe.net/?p=1165
-        
+
         special_suffixes = { '1': 'st', '2': 'nd', '3': 'rd' }
         default_return = 'th'
         digits = str(abs(num)) # To work with negative numbers
@@ -355,7 +356,7 @@ class LastFM(callbacks.Plugin):
         if last_digit in special_suffixes.keys():
             if len(digits) == 1 or digits[-2] != '1':
                 default_return = special_suffixes[last_digit]
-        
+
         return str(num) + default_return
 
 
