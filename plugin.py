@@ -197,8 +197,8 @@ class LastFM(callbacks.Plugin):
 
         (listeners, playcount, usercount, userloved, tags) = parser.parseTrackInformation(fTwo)
 
-        replyStr = self._formatNowPlaying(user, id, track, artist, album, usercount, playcount, listeners, userloved, isNowPlaying)
-        tagStr = self._formatTags(tags)
+        replyStr = self._formatNowPlaying(user, id, track.encode("utf8"), artist.encode("utf8"), album.encode("utf8"), usercount, playcount, listeners, userloved, isNowPlaying)
+        tagStr = self._formatTags(tags).encode("utf8")
 
         if channel == None:
             irc.reply(replyStr + tagStr)
@@ -333,14 +333,13 @@ class LastFM(callbacks.Plugin):
     def _formatNowPlaying(self, user, id, track, artist, album, usercount, playcount, listeners, userloved, isNowPlaying):
         albumStr = ", from the album " + album if album else ""
         usercountStr = " for the " + self._formatPlaycount(usercount + 1) + " time" if usercount > 0 else " for the 1st time"
-<<<<<<< HEAD
         lovedStr = " a loved track," if userloved == 1 else ""
         userStr = "" if user == id else " (" + id + ")"
         
         timeStr = "is now playing" if isNowPlaying == 1 else "last played"
         
         return ('%s%s %s%s "%s" by %s%s%s. This track has been played %s times by %s listeners. ' \
-                    % (user, userStr, timeStr, lovedStr, track, artist, albumStr, usercountStr, playcount, listeners)).encode("utf8")        
+                    % (user, userStr, timeStr, lovedStr, track, artist, albumStr, usercountStr, playcount, listeners)) 
 
     def _formatPlaycount(self, num):
         """Format playcount
