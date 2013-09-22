@@ -105,7 +105,7 @@ class LastFM(callbacks.Plugin):
     APIURL_1_0 = "http://ws.audioscrobbler.com/1.0/user"
 
     # 2.0 API (see http://www.lastfm.de/api/intro)
-    APIKEY = "b7638a70725eea60737f9ad9f56f3099"
+    APIKEY = "fe777aa8d75991a017c59a6ec7ad5bdf"
     APIURL_2_0 = "http://ws.audioscrobbler.com/2.0/?api_key=%s&" % APIKEY
 
     def __init__(self, irc):
@@ -197,7 +197,7 @@ class LastFM(callbacks.Plugin):
 
         (listeners, playcount, usercount, userloved, tags) = parser.parseTrackInformation(fTwo)
 
-        replyStr = self._formatNowPlaying(user, id, track.encode("utf8"), artist.encode("utf8"), album.encode("utf8"), usercount, playcount, listeners, userloved, isNowPlaying)
+        replyStr = self._formatNowPlaying(user, id, track.encode("utf8"), artist.encode("utf8"), album, usercount, playcount, listeners, userloved, isNowPlaying)
         tagStr = self._formatTags(tags).encode("utf8")
 
         if channel == None:
@@ -331,7 +331,7 @@ class LastFM(callbacks.Plugin):
         return tagStr
 
     def _formatNowPlaying(self, user, id, track, artist, album, usercount, playcount, listeners, userloved, isNowPlaying):
-        albumStr = ", from the album " + album if album else ""
+        albumStr = ", from the album " + album.encode("utf8") if album else ""
         usercountStr = " for the " + self._formatPlaycount(usercount + 1) + " time" if usercount > 0 else " for the 1st time"
         lovedStr = " a loved track," if userloved == 1 else ""
         userStr = "" if user == id else " (" + id + ")"
